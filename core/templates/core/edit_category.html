@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+<!-- comment -->
+{% block title %}
+<!-- comment -->
+Edit Category - Finance Tracker
+<!-- comment -->
+{% endblock %}
+<!-- comment -->
+{% block content %}
+<div class="card">
+  <h2 class="card-title">Edit Category</h2>
+  <form method="POST">
+    {% csrf_token %} {% for field in form %}
+    <div class="form-group">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }} {% if field.errors %}
+      <div class="error">{{ field.errors }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="button">Save Changes</button>
+    <a href="{% url 'category_list' %}" class="button">Cancel</a>
+  </form>
+</div>
+{% endblock %}

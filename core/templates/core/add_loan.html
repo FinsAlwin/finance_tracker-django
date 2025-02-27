@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+<!-- comment -->
+{% block title %} Add Loan - Finance Tracker
+<!-- comment -->
+{% endblock %}
+<!-- comment -->
+{% block content %}
+<div class="card">
+  <h2 class="card-title">Add New Loan</h2>
+
+  <form method="post">
+    {% csrf_token %} {{ form.as_p }}
+    <button type="submit" class="button">Add Loan</button>
+  </form>
+</div>
+{% endblock %}

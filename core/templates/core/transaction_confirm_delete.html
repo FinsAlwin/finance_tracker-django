@@ -1,0 +1,30 @@
+{% extends "core/base.html" %}
+<!-- comments -->
+{% block title %} Delete Transaction - Finance Tracker
+<!-- comments -->
+{% endblock %}
+<!-- comments -->
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title mb-0">Delete Transaction</h2>
+  </div>
+  <div class="card-body">
+    <p>Are you sure you want to delete this transaction?</p>
+    <div class="alert alert-warning">
+      <strong>Date:</strong> {{ transaction.date }}<br />
+      <strong>Type:</strong> {{ transaction.get_type_display }}<br />
+      <strong>Category:</strong> {{ transaction.category.name }}<br />
+      <strong>Amount:</strong> ₹{{ transaction.amount }}
+    </div>
+
+    <form method="POST" class="d-flex gap-2">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Yes, delete</button>
+      <a href="{% url 'transaction_list' %}" class="btn btn-secondary"
+        >Cancel</a
+      >
+    </form>
+  </div>
+</div>
+{% endblock %}

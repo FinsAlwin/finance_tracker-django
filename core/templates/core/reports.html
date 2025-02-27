@@ -1,0 +1,200 @@
+{% extends "core/base.html" %}
+<!-- comment -->
+{% block title %}
+<!-- comment -->
+Reports - Finance Tracker
+<!-- comment -->
+{% endblock %}
+<!-- comment -->
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title mb-0">Financial Reports</h2>
+  </div>
+  <div class="card-body">
+    <div class="mb-4">
+      <div class="btn-group" role="group">
+        <button
+          type="button"
+          class="btn btn-outline-secondary {% if period == 'daily' %}active{% endif %}"
+          data-period="daily"
+        >
+          Daily
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary {% if period == 'weekly' %}active{% endif %}"
+          data-period="weekly"
+        >
+          Weekly
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary {% if period == 'monthly' %}active{% endif %}"
+          data-period="monthly"
+        >
+          Monthly
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary {% if period == 'yearly' %}active{% endif %}"
+          data-period="yearly"
+        >
+          Yearly
+        </button>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h3>Spending by Category</h3>
+            <div class="chart-container">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h3>Spending Over Time</h3>
+            <div class="chart-container">
+              <canvas id="spendingChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h3>Spending Details</h3>
+        <div class="list-group">
+          {% for item in spending %}
+          <div
+            class="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <div>{{ item.category__name }}</div>
+            <div class="text-danger">₹{{ item.total }}</div>
+          </div>
+          {% empty %}
+          <div class="text-center py-4 text-muted">
+            No spending recorded for this period.
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <h3>Total Income: <span class="text-success">₹{{ income }}</span></h3>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Setup charts with Chart.js
+  document.addEventListener('DOMContentLoaded', function() {
+    // Setup time period buttons
+    const timeButtons = document.querySelectorAll('.btn');
+    timeButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        window.location.href = `{% url 'reports' %}?period=${this.dataset.period}`;
+      });
+    });
+
+    // Create arrays for chart data
+    const categoryLabels = [];
+    const categoryData = [];
+
+    {% for item in spending %}
+    categoryLabels.push('{{ item.category__name }}');
+    categoryData.push({{ item.total }});
+    {% endfor %}
+
+    if (categoryLabels.length > 0) {
+      const categoryChart = new Chart(
+        document.getElementById('categoryChart'),
+        {
+          type: 'pie',
+          data: {
+            labels: categoryLabels,
+            datasets: [{
+              data: categoryData,
+              backgroundColor: [
+                '#64a5db', '#4caf50', '#ff9800', '#f44336', '#9c27b0',
+                '#3f51b5', '#009688', '#ffeb3b', '#795548', '#607d8b'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {
+                  color: '#e0e0e0'
+                }
+              }
+            }
+          }
+        }
+      );
+
+      // Spending over time chart (placeholder)
+      const spendingChart = new Chart(
+        document.getElementById('spendingChart'),
+        {
+          type: 'line',
+          data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{
+              label: 'Spending',
+              data: [500, 800, 600, 700],
+              borderColor: '#f44336',
+              backgroundColor: 'rgba(244, 67, 54, 0.1)',
+              fill: true
+            }, {
+              label: 'Income',
+              data: [1200, 900, 800, 1100],
+              borderColor: '#4caf50',
+              backgroundColor: 'rgba(76, 175, 80, 0.1)',
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                  color: '#a0a0a0'
+                }
+              },
+              y: {
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                  color: '#a0a0a0'
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: '#e0e0e0'
+                }
+              }
+            }
+          }
+        }
+      );
+    }
+  });
+</script>
+{% endblock %}

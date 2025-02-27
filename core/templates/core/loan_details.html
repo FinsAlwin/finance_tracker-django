@@ -1,0 +1,100 @@
+{% extends "core/base.html" %}
+<!-- comment -->
+{% block title %}
+<!-- comment -->
+Loan Details - Finance Tracker
+<!-- comment -->
+{% endblock %}
+<!-- comment -->
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title mb-0">{{ loan.name }}</h2>
+  </div>
+  <div class="card-body">
+    <div class="row g-4 mb-4">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <h3>Principal</h3>
+            <div class="display-5">₹{{ loan.principal_amount }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <h3>Interest Rate</h3>
+            <div class="display-5">{{ loan.interest_rate }}%</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <h3>Term</h3>
+            <div class="display-5">{{ loan.term_years }} years</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <h3>Monthly Payment</h3>
+            <div class="display-5">₹{{ loan.monthly_payment }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <h3>Total Interest</h3>
+            <div class="display-5">₹{{ total_interest }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body text-center">
+            <h3>Total Payments</h3>
+            <div class="display-5">₹{{ total_payments }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Amortization Schedule</h3>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Payment</th>
+            <th>Principal</th>
+            <th>Interest</th>
+            <th>Remaining Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for month in schedule %}
+          <tr>
+            <td>{{ month.month }}</td>
+            <td>₹{{ month.payment|floatformat:2 }}</td>
+            <td>₹{{ month.principal|floatformat:2 }}</td>
+            <td>₹{{ month.interest|floatformat:2 }}</td>
+            <td>₹{{ month.remaining|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+      <a href="{% url 'edit_loan' loan.id %}" class="btn btn-warning">Edit</a>
+      <a href="{% url 'delete_loan' loan.id %}" class="btn btn-danger"
+        >Delete</a
+      >
+    </div>
+  </div>
+</div>
+{% endblock %}

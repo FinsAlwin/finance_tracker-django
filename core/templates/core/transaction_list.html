@@ -1,0 +1,149 @@
+{% extends "core/base.html" %}
+
+{% block title %}Transactions - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title mb-0">Transactions</h2>
+        <a href="{% url 'add_transaction' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i> Add Transaction
+        </a>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="filters p-3 bg-dark">
+            <div class="d-flex flex-wrap gap-2 align-items-end w-100 mb-3">
+                <div class="btn-group" role="group" aria-label="Period filter">
+                    <a href="?period=daily" class="btn btn-sm btn-outline-secondary {% if period == 'daily' %}active{% endif %}">Daily</a>
+                    <a href="?period=weekly" class="btn btn-sm btn-outline-secondary {% if period == 'weekly' %}active{% endif %}">Weekly</a>
+                    <a href="?period=monthly" class="btn btn-sm btn-outline-secondary {% if period == 'monthly' %}active{% endif %}">Monthly</a>
+                    <a href="?period=yearly" class="btn btn-sm btn-outline-secondary {% if period == 'yearly' %}active{% endif %}">Yearly</a>
+                    <a href="?" class="btn btn-sm btn-outline-secondary {% if not period %}active{% endif %}">All</a>
+                </div>
+            </div>
+            
+            <form method="get" class="d-flex flex-wrap gap-2 align-items-end w-100">
+                <div class="flex-grow-1" style="min-width: 200px;">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" id="search" class="form-control" placeholder="Search..." value="{{ search }}">
+                    </div>
+                </div>
+                
+                <div class="flex-grow-1" style="min-width: 150px;">
+                    <select name="type" id="type" class="form-select form-select-sm">
+                        <option value="">All Types</option>
+                        <option value="income" {% if type_filter == 'income' %}selected{% endif %}>Income</option>
+                        <option value="spending" {% if type_filter == 'spending' %}selected{% endif %}>Spending</option>
+                    </select>
+                </div>
+                
+                <div class="flex-grow-1" style="min-width: 150px;">
+                    <select name="category" id="category" class="form-select form-select-sm">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="d-flex gap-2 flex-grow-1" style="min-width: 300px;">
+                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                        <i class="bi bi-funnel"></i> Apply
+                    </button>
+                    <a href="{% url 'transaction_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </a>
+                    <a href="{% url 'category_list' %}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-tags"></i> Categories
+                    </a>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'export_transactions' %}?format=csv&{{ request.GET.urlencode }}">CSV</a></li>
+                            <li><a class="dropdown-item" href="{% url 'export_transactions' %}?format=pdf&{{ request.GET.urlencode }}">PDF</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in page_obj %}
+                    <tr>
+                        <td>{{ transaction.date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="badge {% if transaction.type == 'income' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ transaction.get_type_display }}
+                            </span>
+                        </td>
+                        <td>{{ transaction.category.name }}</td>
+                        <td>{{ transaction.description|default:"-" }}</td>
+                        <td class="{% if transaction.type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                            ₹{{ transaction.amount }}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'edit_transaction' transaction.id %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'delete_transaction' transaction.id %}" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">No transactions found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="pagination-link">&laquo; first</a>
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="pagination-link">previous</a>
+                </li>
+                {% endif %}
+
+                <li class="page-item">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="pagination-link">next</a>
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="pagination-link">last &raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+
+
+{% endblock %} 

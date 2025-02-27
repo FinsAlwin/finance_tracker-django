@@ -1,0 +1,35 @@
+{% extends "core/base.html" %} {% block navigation %}
+<nav class="login-nav">
+  <div class="logo">Finance Tracker</div>
+  <div class="nav-links">
+    <a href="{% url 'register' %}">Create Account</a>
+  </div>
+</nav>
+{% endblock %} {% block content %}
+<div class="card">
+  <h2 class="card-title">Login</h2>
+
+  {% if form.errors %}
+  <div class="alert error">
+    Your username and password didn't match. Please try again.
+  </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="id_username">Username</label>
+      {{ form.username }}
+    </div>
+    <div class="form-group">
+      <label for="id_password">Password</label>
+      {{ form.password }}
+    </div>
+    <button type="submit" class="button">Login</button>
+  </form>
+
+  <div class="auth-links">
+    <a href="{% url 'register' %}">Create an account</a>
+  </div>
+</div>
+{% endblock %}

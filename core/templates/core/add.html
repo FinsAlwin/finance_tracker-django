@@ -1,0 +1,72 @@
+{% extends "core/base.html" %}
+<!-- comment -->
+{% block title %}
+<!-- comment -->
+Add Transaction - Finance
+<!-- comment -->
+Tracker
+<!-- comment -->
+{% endblock %}
+<!-- comment -->{% block content %}
+<div class="card border-0 shadow">
+  <div class="card-header bg-dark text-light">
+    <h2 class="card-title mb-0">Add New Transaction</h2>
+  </div>
+  <div class="card-body">
+    <form method="POST" class="needs-validation" novalidate>
+      {% csrf_token %}
+      <div class="row g-3">
+        {% for field in form %}
+        <div class="col-md-6">
+          <div class="form-group mb-3">
+            <label
+              for="{{ field.id_for_label }}"
+              class="form-label fw-bold mb-2 text-muted"
+            >
+              {{ field.label }}
+            </label>
+            {{ field }} {% if field.errors %}
+            <div class="invalid-feedback d-block">{{ field.errors }}</div>
+            {% endif %} {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="bi bi-plus-circle me-2"></i> Add Transaction
+        </button>
+        <a
+          href="{% url 'transaction_list' %}"
+          class="btn btn-outline-secondary btn-lg"
+        >
+          <i class="bi bi-x-circle me-2"></i> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .form-control {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+  }
+
+  .form-control:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+
+  .form-label {
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+  }
+</style>
+{% endblock %}

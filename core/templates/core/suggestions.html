@@ -1,0 +1,75 @@
+{% extends "core/base.html" %}
+<!-- comments -->
+{% block title %}
+<!-- comments -->
+Suggestions - Finance Tracker
+<!-- comments -->
+{% endblock %}
+<!-- comments -->
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title mb-0">Financial Insights</h2>
+  </div>
+  <div class="card-body">
+    <div class="row g-4 mb-4">
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body text-center">
+            <h3 class="card-title">Monthly Income</h3>
+            <div class="display-5 text-success">
+              ₹{{ total_income|floatformat:2 }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body text-center">
+            <h3 class="card-title">Monthly Spending</h3>
+            <div class="display-5 text-danger">
+              ₹{{ total_spending|floatformat:2 }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body text-center">
+            <h3 class="card-title">Savings Rate</h3>
+            <div class="display-5 text-primary">
+              {{ savings_rate|floatformat:1 }}%
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <h3>Personalized Financial Advice</h3>
+      <p class="text-muted">
+        Based on your recent transactions, here are some tailored financial
+        recommendations:
+      </p>
+    </div>
+
+    <div class="row g-4">
+      {% for suggestion in suggestion_items %}
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+              <div class="badge bg-primary rounded-circle me-3 p-3">
+                <i class="bi bi-lightbulb fs-4"></i>
+              </div>
+              <h4 class="mb-0">{{ suggestion.title }}</h4>
+            </div>
+            <p class="mb-0">{{ suggestion.description }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

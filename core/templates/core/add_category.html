@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+<!-- comments -->
+{% block title %}
+<!-- comments -->
+Add Category - Finance Tracker
+<!-- comments -->
+{% endblock %}
+<!-- comments -->
+{% block content %}
+<div class="card">
+  <h2 class="card-title">Add New Category</h2>
+  <form method="POST">
+    {% csrf_token %} {% for field in form %}
+    <div class="form-group">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }} {% if field.errors %}
+      <div class="error">{{ field.errors }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="button">Add Category</button>
+  </form>
+</div>
+{% endblock %}
