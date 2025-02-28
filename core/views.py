@@ -3,7 +3,7 @@ from .models import Transaction, Category, Loan
 from .forms import TransactionForm, LoanForm, CategoryForm
 from django.db.models import Sum
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, date
 import os
 import requests
 from dotenv import load_dotenv
@@ -20,6 +20,8 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 import csv
 from io import StringIO
+import json
+from django.core.serializers.json import DjangoJSONEncoder
 load_dotenv()
 
 def query_llm(payload):
@@ -104,28 +106,41 @@ def add_transaction(request):
 def reports(request):
     # Get time period from query param, default to monthly
     period = request.GET.get('period', 'monthly')
+    month_filter = request.GET.get('month', '')
     
-    # Set date range based on period
+    # Set date range based on period or month filter
     today = timezone.now().date()
-    if period == 'daily':
-        start_date = today
-        title = f"Daily Report ({today})"
-    elif period == 'weekly':
-        start_date = today - timedelta(days=7)
-        title = f"Weekly Report ({start_date} to {today})"
-    elif period == 'yearly':
-        start_date = today.replace(month=1, day=1)
-        title = f"Yearly Report ({today.year})"
-    else:  # monthly (default)
-        start_date = today.replace(day=1)
-        title = f"Monthly Report ({today.strftime('%B %Y')})"
+    
+    if month_filter:
+        year, month = map(int, month_filter.split('-'))
+        start_date = date(year, month, 1)
+        if month == 12:
+            end_date = date(year + 1, 1, 1)
+        else:
+            end_date = date(year, month + 1, 1)
+        title = f"Report for {start_date.strftime('%B %Y')}"
+    else:
+        if period == 'daily':
+            start_date = today
+            title = f"Daily Report ({today})"
+        elif period == 'weekly':
+            start_date = today - timedelta(days=7)
+            title = f"Weekly Report ({start_date} to {today})"
+        elif period == 'yearly':
+            start_date = today.replace(month=1, day=1)
+            title = f"Yearly Report ({today.year})"
+        else:  # monthly (default)
+            start_date = today.replace(day=1)
+            title = f"Monthly Report ({today.strftime('%B %Y')})"
+        end_date = today + timedelta(days=1)  # Add 1 day to include today's transactions
     
     # Query transactions for the selected period
     spending_by_category = Transaction.objects.filter(
-        type='spending', 
+        type='spending',
+        user=request.user,
         date__gte=start_date,
-        user=request.user
-    ).values('category__name').annotate(total=Sum('amount'))
+        date__lt=end_date  # Always use end_date, never None
+    ).values('category__name').annotate(total=Sum('amount')).order_by('-total')
     
     total_income = Transaction.objects.filter(
         type='income', 
@@ -133,11 +148,40 @@ def reports(request):
         user=request.user
     ).aggregate(Sum('amount'))['amount__sum'] or 0
     
+    daily_data = Transaction.objects.filter(
+        date__gte=start_date,
+        user=request.user
+    ).values('date').annotate(
+        total_spending=Sum('amount', filter=Q(type='spending')),
+        total_income=Sum('amount', filter=Q(type='income'))
+    ).order_by('date')
+    
     context = {
         'spending': spending_by_category,
         'income': total_income,
+        'title': title,
         'period': period,
-        'title': title
+        'selected_month': month_filter or today.strftime('%Y-%m'),
+        'category_labels': json.dumps(
+            [item['category__name'] for item in spending_by_category], 
+            cls=DjangoJSONEncoder
+        ),
+        'category_data': json.dumps(
+            [float(item['total']) for item in spending_by_category], 
+            cls=DjangoJSONEncoder
+        ),
+        'time_labels': json.dumps(
+            [data['date'].strftime('%Y-%m-%d') for data in daily_data], 
+            cls=DjangoJSONEncoder
+        ),
+        'time_spending': json.dumps(
+            [float(data['total_spending'] or 0) for data in daily_data], 
+            cls=DjangoJSONEncoder
+        ),
+        'time_income': json.dumps(
+            [float(data['total_income'] or 0) for data in daily_data], 
+            cls=DjangoJSONEncoder
+        ),
     }
     
     return render(request, 'core/reports.html', context)
@@ -374,23 +418,35 @@ def transaction_list(request):
     type_filter = request.GET.get('type', '')
     category_filter = request.GET.get('category', '')
     period = request.GET.get('period', '')
+    month_filter = request.GET.get('month', '')
     
     # Base query
     transactions = Transaction.objects.filter(user=request.user)
     
-    # Apply time period filter
-    today = timezone.now().date()
-    if period == 'daily':
-        transactions = transactions.filter(date=today)
-    elif period == 'weekly':
-        start_date = today - timedelta(days=7)
-        transactions = transactions.filter(date__gte=start_date)
-    elif period == 'monthly':
-        start_date = today.replace(day=1)
-        transactions = transactions.filter(date__gte=start_date)
-    elif period == 'yearly':
-        start_date = today.replace(month=1, day=1)
-        transactions = transactions.filter(date__gte=start_date)
+    # Apply month filter if provided
+    if month_filter:
+        year, month = map(int, month_filter.split('-'))
+        start_date = date(year, month, 1)
+        if month == 12:
+            end_date = date(year + 1, 1, 1)
+        else:
+            end_date = date(year, month + 1, 1)
+        transactions = transactions.filter(date__gte=start_date, date__lt=end_date)
+    else:
+        # Apply time period filter only if month filter is not set
+        today = timezone.now().date()
+        if period == 'daily':
+            transactions = transactions.filter(date=today)
+        elif period == 'weekly':
+            start_date = today - timedelta(days=7)
+            transactions = transactions.filter(date__gte=start_date)
+        elif period == 'monthly':
+            start_date = today.replace(day=1)
+            transactions = transactions.filter(date__gte=start_date)
+        elif period == 'yearly':
+            start_date = today.replace(month=1, day=1)
+            end_date = today.replace(month=12, day=31)
+            transactions = transactions.filter(date__range=[start_date, end_date])
     
     # Apply other filters
     if search:
@@ -493,25 +549,38 @@ def export_transactions(request):
     type_filter = request.GET.get('type', '')
     category_filter = request.GET.get('category', '')
     period = request.GET.get('period', '')
+    month_filter = request.GET.get('month', '')
     export_format = request.GET.get('format', 'csv')
 
     # Base query
     transactions = Transaction.objects.filter(user=request.user)
 
-    # Apply filters (same as transaction_list view)
-    today = timezone.now().date()
-    if period == 'daily':
-        transactions = transactions.filter(date=today)
-    elif period == 'weekly':
-        start_date = today - timedelta(days=7)
-        transactions = transactions.filter(date__gte=start_date)
-    elif period == 'monthly':
-        start_date = today.replace(day=1)
-        transactions = transactions.filter(date__gte=start_date)
-    elif period == 'yearly':
-        start_date = today.replace(month=1, day=1)
-        transactions = transactions.filter(date__gte=start_date)
+    # Apply month filter if provided
+    if month_filter:
+        year, month = map(int, month_filter.split('-'))
+        start_date = date(year, month, 1)
+        if month == 12:
+            end_date = date(year + 1, 1, 1)
+        else:
+            end_date = date(year, month + 1, 1)
+        transactions = transactions.filter(date__gte=start_date, date__lt=end_date)
+    else:
+        # Apply time period filter only if month filter is not set
+        today = timezone.now().date()
+        if period == 'daily':
+            transactions = transactions.filter(date=today)
+        elif period == 'weekly':
+            start_date = today - timedelta(days=7)
+            transactions = transactions.filter(date__gte=start_date)
+        elif period == 'monthly':
+            start_date = today.replace(day=1)
+            transactions = transactions.filter(date__gte=start_date)
+        elif period == 'yearly':
+            start_date = today.replace(month=1, day=1)
+            end_date = today.replace(month=12, day=31)
+            transactions = transactions.filter(date__range=[start_date, end_date])
 
+    # Apply other filters
     if search:
         transactions = transactions.filter(
             Q(description__icontains=search) | 

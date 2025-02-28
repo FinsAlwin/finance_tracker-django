@@ -1,35 +1,54 @@
-{% extends "core/base.html" %} {% block navigation %}
-<nav class="login-nav">
-  <div class="logo">Finance Tracker</div>
-  <div class="nav-links">
-    <a href="{% url 'register' %}">Create Account</a>
-  </div>
-</nav>
-{% endblock %} {% block content %}
-<div class="card">
-  <h2 class="card-title">Login</h2>
-
-  {% if form.errors %}
-  <div class="alert error">
-    Your username and password didn't match. Please try again.
-  </div>
-  {% endif %}
-
-  <form method="post">
-    {% csrf_token %}
-    <div class="form-group">
-      <label for="id_username">Username</label>
-      {{ form.username }}
+{% extends "core/base.html" %}
+<!-- comments  -->
+{% block title %}
+<!-- comments  -->
+Login - FinsTracker
+<!-- comments  -->
+{% endblock%}
+<!-- comments  -->
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-lg">
+        <div class="card-body p-4">
+          <h2 class="text-center mb-4">Login</h2>
+          <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="id_username" class="form-label">Username</label>
+              <input
+                type="text"
+                name="username"
+                class="form-control"
+                id="id_username"
+                required
+              />
+              <div class="invalid-feedback">Please enter your username.</div>
+            </div>
+            <div class="mb-3">
+              <label for="id_password" class="form-label">Password</label>
+              <input
+                type="password"
+                name="password"
+                class="form-control"
+                id="id_password"
+                required
+              />
+              <div class="invalid-feedback">Please enter your password.</div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+              Login
+            </button>
+            <div class="text-center">
+              <a href="{% url 'register' %}" class="text-decoration-none"
+                >Create an account</a
+              >
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-    <div class="form-group">
-      <label for="id_password">Password</label>
-      {{ form.password }}
-    </div>
-    <button type="submit" class="button">Login</button>
-  </form>
-
-  <div class="auth-links">
-    <a href="{% url 'register' %}">Create an account</a>
   </div>
 </div>
 {% endblock %}

@@ -1,50 +1,65 @@
 {% extends "core/base.html" %}
-<!-- comment -->
+<!-- Time period selector -->
 {% block title %}
-<!-- comment -->
+<!-- Time period selector -->
 Reports - Finance Tracker
-<!-- comment -->
+<!-- Time period selector -->
 {% endblock %}
-<!-- comment -->
+<!-- Time period selector -->
 {% block content %}
 <div class="card">
   <div class="card-header">
     <h2 class="card-title mb-0">Financial Reports</h2>
   </div>
   <div class="card-body">
+    <!-- Time period selector -->
     <div class="mb-4">
-      <div class="btn-group" role="group">
-        <button
-          type="button"
-          class="btn btn-outline-secondary {% if period == 'daily' %}active{% endif %}"
-          data-period="daily"
-        >
-          Daily
-        </button>
-        <button
-          type="button"
-          class="btn btn-outline-secondary {% if period == 'weekly' %}active{% endif %}"
-          data-period="weekly"
-        >
-          Weekly
-        </button>
-        <button
-          type="button"
-          class="btn btn-outline-secondary {% if period == 'monthly' %}active{% endif %}"
-          data-period="monthly"
-        >
-          Monthly
-        </button>
-        <button
-          type="button"
-          class="btn btn-outline-secondary {% if period == 'yearly' %}active{% endif %}"
-          data-period="yearly"
-        >
-          Yearly
-        </button>
+      <div class="d-flex align-items-center gap-2">
+        <div class="btn-group" role="group">
+          <button
+            type="button"
+            class="btn btn-outline-secondary {% if period == 'daily' %}active{% endif %}"
+            data-period="daily"
+          >
+            Daily
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-secondary {% if period == 'weekly' %}active{% endif %}"
+            data-period="weekly"
+          >
+            Weekly
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-secondary {% if period == 'monthly' %}active{% endif %}"
+            data-period="monthly"
+          >
+            Monthly
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-secondary {% if period == 'yearly' %}active{% endif %}"
+            data-period="yearly"
+          >
+            Yearly
+          </button>
+        </div>
+        <div>
+          <input
+            type="month"
+            name="month"
+            id="month"
+            class="form-control"
+            value="{{ selected_month }}"
+            onchange="updateMonthFilter(this.value)"
+            style="max-width: 200px"
+          />
+        </div>
       </div>
     </div>
 
+    <!-- Charts -->
     <div class="row g-4 mb-4">
       <div class="col-md-6">
         <div class="card">
@@ -59,7 +74,7 @@ Reports - Finance Tracker
       <div class="col-md-6">
         <div class="card">
           <div class="card-body">
-            <h3>Spending Over Time</h3>
+            <h3>Income vs Spending Over Time</h3>
             <div class="chart-container">
               <canvas id="spendingChart"></canvas>
             </div>
@@ -68,6 +83,7 @@ Reports - Finance Tracker
       </div>
     </div>
 
+    <!-- Spending Details -->
     <div class="card">
       <div class="card-body">
         <h3>Spending Details</h3>
@@ -94,106 +110,119 @@ Reports - Finance Tracker
   </div>
 </div>
 
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // Setup charts with Chart.js
-  document.addEventListener('DOMContentLoaded', function() {
-    // Setup time period buttons
-    const timeButtons = document.querySelectorAll('.btn');
-    timeButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        window.location.href = `{% url 'reports' %}?period=${this.dataset.period}`;
+  // Month filter function
+  function updateMonthFilter(month) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("month", month);
+    window.location.href = url.toString();
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    // Time period button handlers
+    const timeButtons = document.querySelectorAll(".btn");
+    timeButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        const url = new URL(window.location.href);
+        url.searchParams.set("period", this.dataset.period);
+        window.location.href = url.toString();
       });
     });
 
-    // Create arrays for chart data
-    const categoryLabels = [];
-    const categoryData = [];
+    // Initialize chart data arrays
+    const categoryLabels = JSON.parse("{{ category_labels|escapejs }}");
+    const categoryData = JSON.parse("{{ category_data|escapejs }}");
+    const timeLabels = JSON.parse("{{ time_labels|escapejs }}");
+    const timeSpending = JSON.parse("{{ time_spending|escapejs }}");
+    const timeIncome = JSON.parse("{{ time_income|escapejs }}");
 
-    {% for item in spending %}
-    categoryLabels.push('{{ item.category__name }}');
-    categoryData.push({{ item.total }});
-    {% endfor %}
+    // Check for both canvas elements and data
+    const categoryCanvas = document.getElementById("categoryChart");
+    const spendingCanvas = document.getElementById("spendingChart");
+    if (categoryLabels.length > 0 && categoryCanvas && spendingCanvas) {
+      // Add debug logging
+      console.log("Category Labels:", categoryLabels);
+      console.log("Category Data:", categoryData);
 
-    if (categoryLabels.length > 0) {
-      const categoryChart = new Chart(
-        document.getElementById('categoryChart'),
-        {
-          type: 'pie',
-          data: {
-            labels: categoryLabels,
-            datasets: [{
+      // Pie chart for categories
+      const categoryChart = new Chart(categoryCanvas, {
+        type: "pie",
+        data: {
+          labels: categoryLabels,
+          datasets: [
+            {
               data: categoryData,
               backgroundColor: [
-                '#64a5db', '#4caf50', '#ff9800', '#f44336', '#9c27b0',
-                '#3f51b5', '#009688', '#ffeb3b', '#795548', '#607d8b'
-              ]
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                position: 'right',
-                labels: {
-                  color: '#e0e0e0'
-                }
-              }
-            }
-          }
-        }
-      );
-
-      // Spending over time chart (placeholder)
-      const spendingChart = new Chart(
-        document.getElementById('spendingChart'),
-        {
-          type: 'line',
-          data: {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            datasets: [{
-              label: 'Spending',
-              data: [500, 800, 600, 700],
-              borderColor: '#f44336',
-              backgroundColor: 'rgba(244, 67, 54, 0.1)',
-              fill: true
-            }, {
-              label: 'Income',
-              data: [1200, 900, 800, 1100],
-              borderColor: '#4caf50',
-              backgroundColor: 'rgba(76, 175, 80, 0.1)',
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              x: {
-                grid: {
-                  color: 'rgba(255, 255, 255, 0.1)'
-                },
-                ticks: {
-                  color: '#a0a0a0'
-                }
-              },
-              y: {
-                grid: {
-                  color: 'rgba(255, 255, 255, 0.1)'
-                },
-                ticks: {
-                  color: '#a0a0a0'
-                }
-              }
+                "#64a5db",
+                "#4caf50",
+                "#ff9800",
+                "#f44336",
+                "#9c27b0",
+                "#3f51b5",
+                "#009688",
+                "#ffeb3b",
+                "#795548",
+                "#607d8b",
+              ],
             },
-            plugins: {
-              legend: {
-                labels: {
-                  color: '#e0e0e0'
-                }
-              }
-            }
-          }
-        }
-      );
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+              labels: { color: "#e0e0e0" },
+            },
+          },
+        },
+      });
+
+      // Line chart for spending over time
+      const spendingChart = new Chart(spendingCanvas, {
+        type: "line",
+        data: {
+          labels: timeLabels,
+          datasets: [
+            {
+              label: "Spending",
+              data: timeSpending,
+              borderColor: "#f44336",
+              backgroundColor: "rgba(244, 67, 54, 0.1)",
+              fill: true,
+            },
+            {
+              label: "Income",
+              data: timeIncome,
+              borderColor: "#4caf50",
+              backgroundColor: "rgba(76, 175, 80, 0.1)",
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              grid: { color: "rgba(255, 255, 255, 0.1)" },
+              ticks: { color: "#a0a0a0" },
+            },
+            y: {
+              grid: { color: "rgba(255, 255, 255, 0.1)" },
+              ticks: { color: "#a0a0a0" },
+            },
+          },
+          plugins: {
+            legend: { labels: { color: "#e0e0e0" } },
+          },
+        },
+      });
+    } else {
+      console.log("No spending data available or canvas elements missing");
     }
   });
 </script>

@@ -230,8 +230,20 @@ button:hover {
 
 /* Charts */
 .chart-container {
-  height: 300px;
+  height: 400px;
   margin-bottom: 30px;
+  position: relative;
+}
+
+/* Specific style for pie chart container */
+#categoryChart {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Specific style for line chart container */
+#spendingChart {
+  height: 500px;
 }
 
 /* Responsive design */
@@ -906,4 +918,41 @@ button:hover {
 .btn-primary.rounded-circle:hover {
     transform: scale(1.1);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Login page styles */
+.login-card {
+    max-width: 400px;
+    margin: 0 auto;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-card .card-body {
+    padding: 2rem;
+}
+
+.login-card h2 {
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.login-card .form-control {
+    padding: 0.75rem 1rem;
+    border-radius: 5px;
+}
+
+.login-card .btn-primary {
+    padding: 0.75rem;
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+.login-card .text-center a {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.login-card .text-center a:hover {
+    text-decoration: underline;
 }

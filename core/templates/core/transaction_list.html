@@ -32,7 +32,11 @@
                 </div>
                 
                 <div class="flex-grow-1" style="min-width: 150px;">
-                    <select name="type" id="type" class="form-select form-select-sm">
+                    <input type="month" name="month" class="form-control form-control-sm" value="{{ month_filter }}" onchange="this.form.submit()">
+                </div>
+                
+                <div class="flex-grow-1" style="min-width: 150px;">
+                    <select name="type" id="type" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">All Types</option>
                         <option value="income" {% if type_filter == 'income' %}selected{% endif %}>Income</option>
                         <option value="spending" {% if type_filter == 'spending' %}selected{% endif %}>Spending</option>
@@ -40,7 +44,7 @@
                 </div>
                 
                 <div class="flex-grow-1" style="min-width: 150px;">
-                    <select name="category" id="category" class="form-select form-select-sm">
+                    <select name="category" id="category" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="">All Categories</option>
                         {% for category in categories %}
                         <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"s" %}selected{% endif %}>
@@ -49,6 +53,9 @@
                         {% endfor %}
                     </select>
                 </div>
+                
+                <!-- Add hidden fields to preserve other filters -->
+                <input type="hidden" name="period" value="{{ period }}">
                 
                 <div class="d-flex gap-2 flex-grow-1" style="min-width: 300px;">
                     <button type="submit" class="btn btn-primary btn-sm flex-grow-1">

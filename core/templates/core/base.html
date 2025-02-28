@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Finance Tracker{% endblock %}</title>
+    <title>{% block title %}FinsTracker{% endblock %}</title>
     {% load static %}
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -48,6 +48,46 @@
           transform: rotate(360deg);
         }
       }
+
+      .splash-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease;
+      }
+
+      .splash-content {
+        text-align: center;
+        animation: fadeIn 1s ease;
+      }
+
+      .splash-logo {
+        font-size: 4rem;
+        color: #fff;
+        margin-bottom: 1rem;
+      }
+
+      .splash-text {
+        font-size: 2.5rem;
+        color: #fff;
+        font-weight: bold;
+      }
+
+      @keyframes fadeIn {
+        0% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
@@ -55,6 +95,14 @@
     <!-- Loader -->
     <div id="page-loader">
       <div class="loader"></div>
+    </div>
+
+    <!-- Add this right after the opening <body> tag -->
+    <div id="splash-screen" class="splash-screen">
+      <div class="splash-content">
+        <i class="bi bi-piggy-bank splash-logo"></i>
+        <h1 class="splash-text">FinsTracker</h1>
+      </div>
     </div>
 
     <nav
@@ -66,7 +114,7 @@
           href="{% url 'home' %}"
         >
           <i class="bi bi-piggy-bank me-2"></i>
-          Finance Tracker
+          FinsTracker
         </a>
         <button
           class="navbar-toggler"
@@ -78,6 +126,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto">
+            {% if user.is_authenticated %}
             <li class="nav-item">
               <a
                 class="nav-link d-flex align-items-center"
@@ -106,6 +155,7 @@
                 Suggestions
               </a>
             </li>
+            {% endif %}
           </ul>
           <div class="d-flex align-items-center">
             {% if user.is_authenticated %}
@@ -200,6 +250,28 @@
             pageLoader.style.display = "flex";
             pageLoader.style.opacity = "1";
           });
+        }
+      });
+    </script>
+
+    <!-- Add this JavaScript at the end of the file, before </body> -->
+    <script>
+      window.addEventListener("load", function () {
+        // Check if splash has been shown before
+        if (!localStorage.getItem("splashShown")) {
+          setTimeout(function () {
+            const splashScreen = document.getElementById("splash-screen");
+            splashScreen.style.opacity = "0";
+            setTimeout(function () {
+              splashScreen.remove();
+              // Set flag in localStorage
+              localStorage.setItem("splashShown", "true");
+            }, 500);
+          }, 2000); // 2 seconds duration
+        } else {
+          // If already shown, remove splash immediately
+          const splashScreen = document.getElementById("splash-screen");
+          splashScreen.remove();
         }
       });
     </script>
